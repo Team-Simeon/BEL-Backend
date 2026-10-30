@@ -69,15 +69,58 @@ Backend частта ще отговаря за бизнес логиката, �
 
 > Маршрутите са ориентировъчни и може да се променят по време на имплементацията.
 
+### Модели, роли и достъп
+
+- **User** — имейл (уникален), хеширана парола, име, роля, училище, статус на одобрение и активност.
+- **School** — име (уникално), град, адрес и статус на активност.
+- **UserRole** — `Student`, `Teacher`, `Admin`.
+- **Teacher-School** — учителят има задължително избрано училище (`User.SchoolId`), а едно училище може да има много учители. Връзката е защитена и с DB check constraint, така че само учители могат да имат училище.
+- **Одобрение на учители** — новите учители се създават с `IsApproved = false` и не могат да влязат, докато администратор не ги одобри.
+- **Роли** — `Admin` управлява потребители и училища; `Teacher` и `Student` имат достъп само до собствения си профил. JWT токенът съдържа ролята на потребителя.
+
+| Метод и маршрут | Достъп | Описание |
+| --- | --- | --- |
+| `POST /api/auth/register/student` | Публичен | Регистрация на ученик; връща JWT токен |
+| `POST /api/auth/register/teacher` | Публичен | Регистрация на учител към училище; чака одобрение |
+| `POST /api/auth/login` | Публичен | Вход; блокиран за неодобрени/деактивирани профили |
+| `GET /api/auth/me` | Удостоверен | Профил на текущия потребител |
+| `GET /api/schools` | Публичен | Активни училища (админ може `?includeInactive=true`) |
+| `GET /api/schools/{id}` | Публичен | Детайли за училище |
+| `POST/PUT/DELETE /api/schools` | Само `Admin` | Управление на училища |
+| `GET /api/users` | Само `Admin` | Списък с филтри, търсене и пагинация |
+| `GET /api/users/{id}` | `Admin` или самият потребител | Профил; чужд профил връща `403` |
+| `GET/PUT /api/users/me` | Удостоверен | Преглед/редакция на собствените имена |
+| `PUT /api/users/{id}` | Само `Admin` | Роля, училище, одобрение и активност |
+| `POST /api/users/{id}/approve` | Само `Admin` | Одобряване на учител |
+| `DELETE /api/users/{id}` | Само `Admin` | Изтриване (без собствен профил) |
+
+Грешките се връщат като `ProblemDetails` с подходящ статус код (`400`, `401`, `403`, `404`, `409`) и `traceId`. Невалидните DTO полета връщат `ValidationProblemDetails` с грешки по поле.
+
 ### Стартиране
 
 **Изисквания:** .NET 10 SDK, Visual Studio 2026 (или `dotnet` CLI) и SQL Server LocalDB (идва с Visual Studio).
 
 1. Отвори `BEL-Backend.slnx` във Visual Studio 2026.
 2. Възстанови EF инструмента (веднъж): `dotnet tool restore`
-3. Създай/обнови базата: `dotnet ef database update --project src/BEL.Api`
-4. Стартирай `BEL.Api` (профил `http` или `https`). Swagger UI се отваря на `http://localhost:5085/swagger`.
-5. Проверка: `GET /api/health` връща `{"status":"Healthy","database":true}`.
+3. Конфигурирай JWT ключ (поне 32 символа) локално:
+
+   ```
+   dotnet user-secrets set "Jwt:Key" "<дълъг случаен ключ>" --project src/BEL.Api
+   ```
+
+4. Създай първия администратор (по избор, но е нужен за одобряване на учители):
+
+   ```
+   dotnet user-secrets set "Seed:AdminEmail" "admin@belprep.local" --project src/BEL.Api
+   dotnet user-secrets set "Seed:AdminPassword" "<сигурна парола>" --project src/BEL.Api
+   ```
+
+   Акаунтът се създава само при първо стартиране, ако още няма администратор.
+5. Създай/обнови базата: `dotnet ef database update --project src/BEL.Api`
+6. Стартирай `BEL.Api` (профил `http` или `https`). Swagger UI се отваря на `http://localhost:5085/swagger`.
+7. Проверка: `GET /api/health` връща `{"status":"Healthy","database":true}`.
+
+Паролата се хешира с PBKDF2 (SHA-256), а JWT токените имат ограничен срок на валидност.
 
 **Connection string:** по подразбиране `appsettings.Development.json` сочи към LocalDB (`BelPrep`, Windows authentication, без пароли). Ако използваш друг SQL Server, презапиши го локално чрез User Secrets, а не в Git:
 
@@ -86,6 +129,10 @@ dotnet user-secrets set "ConnectionStrings:DefaultConnection" "<твоят conne
 ```
 
 **Нова миграция:** `dotnet ef migrations add <Име> --project src/BEL.Api -o Data/Migrations`
+
+**Тестове:** `dotnet test BEL-Backend.slnx`
+
+Интеграционните тестове използват `WebApplicationFactory` с SQLite in-memory и покриват положителни и отрицателни сценарии за регистрация, вход, роли, ownership, одобрение на учители и управление на училища.
 
 Не добавяйте пароли, JWT secrets или connection strings с реални credentials в Git.
 
