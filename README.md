@@ -71,7 +71,23 @@ Backend частта ще отговаря за бизнес логиката, �
 
 ### Стартиране
 
-Инструкции за инсталация, миграции, конфигурация и локално стартиране ще бъдат добавени след първоначалното изграждане на API. Не добавяйте пароли, JWT secrets или connection strings с реални credentials в Git.
+**Изисквания:** .NET 10 SDK, Visual Studio 2026 (или `dotnet` CLI) и SQL Server LocalDB (идва с Visual Studio).
+
+1. Отвори `BEL-Backend.slnx` във Visual Studio 2026.
+2. Възстанови EF инструмента (веднъж): `dotnet tool restore`
+3. Създай/обнови базата: `dotnet ef database update --project src/BEL.Api`
+4. Стартирай `BEL.Api` (профил `http` или `https`). Swagger UI се отваря на `http://localhost:5085/swagger`.
+5. Проверка: `GET /api/health` връща `{"status":"Healthy","database":true}`.
+
+**Connection string:** по подразбиране `appsettings.Development.json` сочи към LocalDB (`BelPrep`, Windows authentication, без пароли). Ако използваш друг SQL Server, презапиши го локално чрез User Secrets, а не в Git:
+
+```
+dotnet user-secrets set "ConnectionStrings:DefaultConnection" "<твоят connection string>" --project src/BEL.Api
+```
+
+**Нова миграция:** `dotnet ef migrations add <Име> --project src/BEL.Api -o Data/Migrations`
+
+Не добавяйте пароли, JWT secrets или connection strings с реални credentials в Git.
 
 ### Задачи
 

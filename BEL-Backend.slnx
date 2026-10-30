@@ -1,0 +1,5 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/BEL.Api/BEL.Api.csproj" />
+  </Folder>
+</Solution>
