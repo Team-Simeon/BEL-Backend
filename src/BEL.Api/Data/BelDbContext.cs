@@ -9,6 +9,8 @@ public class BelDbContext(DbContextOptions<BelDbContext> options) : DbContext(op
 
     public DbSet<School> Schools => Set<School>();
 
+    public DbSet<RevokedToken> RevokedTokens => Set<RevokedToken>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);

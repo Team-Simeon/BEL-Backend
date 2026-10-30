@@ -25,6 +25,9 @@ public sealed class User
 
     public bool IsActive { get; set; } = true;
 
+    // Embedded in every issued JWT; rotating it invalidates all of the user's existing tokens.
+    public Guid SecurityStamp { get; set; } = Guid.NewGuid();
+
     public DateTime CreatedAtUtc { get; set; } = DateTime.UtcNow;
 
     public DateTime UpdatedAtUtc { get; set; } = DateTime.UtcNow;

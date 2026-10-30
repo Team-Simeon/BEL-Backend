@@ -9,4 +9,8 @@ public interface IAuthService
     Task<RegistrationResponse> RegisterTeacherAsync(RegisterTeacherRequest request, CancellationToken cancellationToken);
 
     Task<AuthResponse> LoginAsync(LoginRequest request, CancellationToken cancellationToken);
+
+    Task LogoutAsync(Guid userId, string tokenId, DateTime expiresAtUtc, CancellationToken cancellationToken);
+
+    Task LogoutEverywhereAsync(Guid userId, CancellationToken cancellationToken);
 }

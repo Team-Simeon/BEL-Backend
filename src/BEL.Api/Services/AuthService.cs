@@ -103,6 +103,46 @@ public sealed class AuthService(
         return new AuthResponse(token.Token, token.ExpiresAtUtc, user.ToResponse());
     }
 
+    public async Task LogoutAsync(
+        Guid userId,
+        string tokenId,
+        DateTime expiresAtUtc,
+        CancellationToken cancellationToken)
+    {
+        var now = DateTime.UtcNow;
+
+        // Revoked entries are only needed until the token would have expired anyway.
+        await db.RevokedTokens
+            .Where(t => t.ExpiresAtUtc < now)
+            .ExecuteDeleteAsync(cancellationToken);
+
+        if (await db.RevokedTokens.AnyAsync(t => t.TokenId == tokenId, cancellationToken))
+        {
+            return;
+        }
+
+        db.RevokedTokens.Add(new RevokedToken
+        {
+            TokenId = tokenId,
+            UserId = userId,
+            ExpiresAtUtc = expiresAtUtc,
+            RevokedAtUtc = now
+        });
+
+        await db.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task LogoutEverywhereAsync(Guid userId, CancellationToken cancellationToken)
+    {
+        var user = await db.Users.FirstOrDefaultAsync(u => u.Id == userId, cancellationToken)
+            ?? throw new NotFoundException("User not found.");
+
+        user.SecurityStamp = Guid.NewGuid();
+        user.UpdatedAtUtc = DateTime.UtcNow;
+
+        await db.SaveChangesAsync(cancellationToken);
+    }
+
     private async Task<string> EnsureEmailIsAvailableAsync(string email, CancellationToken cancellationToken)
     {
         var normalizedEmail = NormalizeEmail(email);
