@@ -26,6 +26,7 @@ builder.Services
 
 builder.Services.AddSingleton<IPasswordHasher, Pbkdf2PasswordHasher>();
 builder.Services.AddScoped<ITokenService, TokenService>();
+builder.Services.AddScoped<ITokenSessionValidator, TokenSessionValidator>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<ISchoolService, SchoolService>();
@@ -63,6 +64,19 @@ builder.Services
             ClockSkew = TimeSpan.FromSeconds(30),
             NameClaimType = System.Security.Claims.ClaimTypes.Name,
             RoleClaimType = System.Security.Claims.ClaimTypes.Role
+        };
+        options.Events = new JwtBearerEvents
+        {
+            OnTokenValidated = async context =>
+            {
+                var validator = context.HttpContext.RequestServices.GetRequiredService<ITokenSessionValidator>();
+                var failure = await validator.ValidateAsync(context.Principal!, context.HttpContext.RequestAborted);
+
+                if (failure is not null)
+                {
+                    context.Fail(failure);
+                }
+            }
         };
     });
 
