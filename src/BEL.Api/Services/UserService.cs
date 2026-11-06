@@ -126,14 +126,23 @@ public sealed class UserService(BelDbContext db) : IUserService
                 ?? throw new BadRequestException("The selected school does not exist or is inactive.");
         }
 
+        var isApproved = role == UserRole.Teacher ? request.IsApproved : true;
+        var accessChanged = user.Role != role || user.IsActive != request.IsActive || user.IsApproved != isApproved;
+
         user.FirstName = request.FirstName.Trim();
         user.LastName = request.LastName.Trim();
         user.Role = role;
         user.SchoolId = school?.Id;
         user.School = school;
-        user.IsApproved = role == UserRole.Teacher ? request.IsApproved : true;
+        user.IsApproved = isApproved;
         user.IsActive = request.IsActive;
         user.UpdatedAtUtc = DateTime.UtcNow;
+
+        if (accessChanged)
+        {
+            // Sign the user out everywhere so old tokens never regain access, e.g. after reactivation.
+            user.SecurityStamp = Guid.NewGuid();
+        }
 
         await db.SaveChangesAsync(cancellationToken);
         return user.ToResponse();

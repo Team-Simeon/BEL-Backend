@@ -21,6 +21,7 @@ public sealed class TokenService(IOptions<JwtOptions> options) : ITokenService
             new(ClaimTypes.Email, user.Email),
             new(ClaimTypes.Name, user.FullName),
             new(ClaimTypes.Role, user.Role.ToString()),
+            new(BelClaimTypes.SecurityStamp, user.SecurityStamp.ToString()),
             new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
         };
 

@@ -22,6 +22,30 @@ namespace BEL.Api.Data.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
+            modelBuilder.Entity("BEL.Api.Models.RevokedToken", b =>
+                {
+                    b.Property<string>("TokenId")
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)");
+
+                    b.Property<DateTime>("ExpiresAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("RevokedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("TokenId");
+
+                    b.HasIndex("ExpiresAtUtc");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("RevokedTokens", (string)null);
+                });
+
             modelBuilder.Entity("BEL.Api.Models.School", b =>
                 {
                     b.Property<Guid>("Id")
@@ -102,6 +126,9 @@ namespace BEL.Api.Data.Migrations
                     b.Property<Guid?>("SchoolId")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<Guid>("SecurityStamp")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<DateTime>("UpdatedAtUtc")
                         .HasColumnType("datetime2");
 
@@ -118,6 +145,15 @@ namespace BEL.Api.Data.Migrations
                         {
                             t.HasCheckConstraint("CK_Users_TeacherSchool", "([Role] <> 'Teacher' OR [SchoolId] IS NOT NULL) AND ([Role] = 'Teacher' OR [SchoolId] IS NULL)");
                         });
+                });
+
+            modelBuilder.Entity("BEL.Api.Models.RevokedToken", b =>
+                {
+                    b.HasOne("BEL.Api.Models.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("BEL.Api.Models.User", b =>

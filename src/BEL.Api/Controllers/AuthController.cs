@@ -41,6 +41,27 @@ public sealed class AuthController(IAuthService authService, IUserService userSe
         return Ok(response);
     }
 
+    [HttpPost("logout")]
+    [Authorize]
+    public async Task<IActionResult> Logout(CancellationToken cancellationToken)
+    {
+        await authService.LogoutAsync(
+            User.GetUserId(),
+            User.GetTokenId(),
+            User.GetTokenExpiresAtUtc(),
+            cancellationToken);
+
+        return NoContent();
+    }
+
+    [HttpPost("logout-all")]
+    [Authorize]
+    public async Task<IActionResult> LogoutEverywhere(CancellationToken cancellationToken)
+    {
+        await authService.LogoutEverywhereAsync(User.GetUserId(), cancellationToken);
+        return NoContent();
+    }
+
     [HttpGet("me")]
     [Authorize]
     public async Task<ActionResult<UserResponse>> Me(CancellationToken cancellationToken)
