@@ -1,9 +1,11 @@
 using BEL.Api.Data;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BEL.Api.Controllers;
 
 [ApiController]
+[AllowAnonymous]
 [Route("api/[controller]")]
 public class HealthController(BelDbContext db) : ControllerBase
 {

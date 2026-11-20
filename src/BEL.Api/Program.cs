@@ -2,7 +2,6 @@ using System.Text;
 using System.Text.Json.Serialization;
 using BEL.Api.Data;
 using BEL.Api.Middleware;
-using BEL.Api.Models;
 using BEL.Api.Security;
 using BEL.Api.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -80,14 +79,7 @@ builder.Services
         };
     });
 
-builder.Services.AddAuthorization(options =>
-{
-    options.AddPolicy(AuthorizationPolicies.AdminOnly,
-        policy => policy.RequireRole(nameof(UserRole.Admin)));
-
-    options.AddPolicy(AuthorizationPolicies.TeacherOrAdmin,
-        policy => policy.RequireRole(nameof(UserRole.Teacher), nameof(UserRole.Admin)));
-});
+builder.Services.AddAuthorization(options => options.AddBelPolicies());
 
 builder.Services.AddOpenApi();
 
@@ -95,7 +87,7 @@ var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
 {
-    app.MapOpenApi();
+    app.MapOpenApi().AllowAnonymous();
     app.UseSwaggerUI(options =>
     {
         options.SwaggerEndpoint("/openapi/v1.json", "BEL API v1");
