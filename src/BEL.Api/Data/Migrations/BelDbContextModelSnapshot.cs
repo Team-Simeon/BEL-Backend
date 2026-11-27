@@ -22,6 +22,37 @@ namespace BEL.Api.Data.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
+            modelBuilder.Entity("BEL.Api.Models.Feedback", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Message")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatedAtUtc");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("Feedback", (string)null);
+                });
+
             modelBuilder.Entity("BEL.Api.Models.RevokedToken", b =>
                 {
                     b.Property<string>("TokenId")
@@ -145,6 +176,17 @@ namespace BEL.Api.Data.Migrations
                         {
                             t.HasCheckConstraint("CK_Users_TeacherSchool", "([Role] <> 'Teacher' OR [SchoolId] IS NOT NULL) AND ([Role] = 'Teacher' OR [SchoolId] IS NULL)");
                         });
+                });
+
+            modelBuilder.Entity("BEL.Api.Models.Feedback", b =>
+                {
+                    b.HasOne("BEL.Api.Models.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("BEL.Api.Models.RevokedToken", b =>

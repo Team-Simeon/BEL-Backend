@@ -29,6 +29,7 @@ builder.Services.AddScoped<ITokenSessionValidator, TokenSessionValidator>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<ISchoolService, SchoolService>();
+builder.Services.AddScoped<IFeedbackService, FeedbackService>();
 
 var jwtSection = builder.Configuration.GetSection(JwtOptions.SectionName);
 var jwtOptions = jwtSection.Get<JwtOptions>() ?? new JwtOptions();

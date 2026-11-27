@@ -11,6 +11,8 @@ public class BelDbContext(DbContextOptions<BelDbContext> options) : DbContext(op
 
     public DbSet<RevokedToken> RevokedTokens => Set<RevokedToken>();
 
+    public DbSet<Feedback> Feedback => Set<Feedback>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
