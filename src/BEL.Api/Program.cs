@@ -84,6 +84,17 @@ builder.Services.AddAuthorization(options => options.AddBelPolicies());
 
 builder.Services.AddOpenApi();
 
+// The frontend runs on another origin (Vite dev server on port 5173), so the
+// browser needs CORS headers to call this API. Origins come from configuration.
+const string FrontendCorsPolicy = "Frontend";
+var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() ?? [];
+
+builder.Services.AddCors(options =>
+    options.AddPolicy(FrontendCorsPolicy, policy => policy
+        .WithOrigins(allowedOrigins)
+        .AllowAnyHeader()
+        .AllowAnyMethod()));
+
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
@@ -98,6 +109,9 @@ if (app.Environment.IsDevelopment())
 
 app.UseExceptionHandler();
 app.UseStatusCodePages();
+
+// Before HTTPS redirection and auth, so preflight requests are answered directly.
+app.UseCors(FrontendCorsPolicy);
 
 if (!app.Environment.IsEnvironment("Testing"))
 {

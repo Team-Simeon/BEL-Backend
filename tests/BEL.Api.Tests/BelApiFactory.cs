@@ -13,6 +13,7 @@ public sealed class BelApiFactory : WebApplicationFactory<Program>
 {
     public const string AdminEmail = "admin@belprep.test";
     public const string AdminPassword = "AdminPass123";
+    public const string AllowedFrontendOrigin = "http://localhost:5173";
 
     private const string TestJwtKey =
         "bel-prep-integration-tests-signing-key-please-change-in-production-123456";
@@ -28,6 +29,7 @@ public sealed class BelApiFactory : WebApplicationFactory<Program>
         builder.UseSetting("Jwt:Audience", "BEL.Api.Tests");
         builder.UseSetting("Jwt:Key", TestJwtKey);
         builder.UseSetting("Jwt:ExpiryMinutes", "60");
+        builder.UseSetting("Cors:AllowedOrigins:0", AllowedFrontendOrigin);
         builder.UseSetting("Seed:AdminEmail", AdminEmail);
         builder.UseSetting("Seed:AdminPassword", AdminPassword);
         builder.UseSetting("Logging:LogLevel:Microsoft.EntityFrameworkCore.Database.Command", "Warning");
