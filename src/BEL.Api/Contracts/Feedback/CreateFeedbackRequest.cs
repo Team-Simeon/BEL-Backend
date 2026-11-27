@@ -10,8 +10,8 @@ public sealed class CreateFeedbackRequest : IValidatableObject
     public string? Message { get; init; }
 
     public FeedbackType? GetFeedbackType() =>
-        Enum.TryParse<FeedbackType>(Type, ignoreCase: false, out var type) && Enum.IsDefined(type)
-            ? type
+        Enum.GetNames<FeedbackType>().Contains(Type, StringComparer.Ordinal)
+            ? Enum.Parse<FeedbackType>(Type!)
             : null;
 
     public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)

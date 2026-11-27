@@ -111,6 +111,10 @@ public sealed class FeedbackTests(BelApiFactory factory) : IntegrationTestBase(f
     [Theory]
     [InlineData("Invalid")]
     [InlineData("3")]
+    [InlineData("0")]
+    [InlineData("1")]
+    [InlineData("Problem, Suggestion")]
+    [InlineData("problem")]
     [InlineData("")]
     public async Task CreateFeedback_WithInvalidType_ReturnsBadRequest(string type)
     {
