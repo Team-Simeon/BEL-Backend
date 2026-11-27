@@ -1,3 +1,4 @@
+using System.Data.Common;
 using BEL.Api.Exceptions;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
@@ -58,6 +59,10 @@ public sealed class GlobalExceptionHandler(
             StatusCodes.Status409Conflict,
             "Conflict",
             "The request conflicts with existing data."),
+        DbException => (
+            StatusCodes.Status503ServiceUnavailable,
+            "Database Unavailable",
+            "The database is temporarily unavailable. Please try again later."),
         _ => (
             StatusCodes.Status500InternalServerError,
             "Internal Server Error",

@@ -1,7 +1,9 @@
+using System.Data.Common;
 using BEL.Api.Contracts.Feedback;
 using BEL.Api.Data;
 using BEL.Api.Exceptions;
 using BEL.Api.Models;
+using Microsoft.EntityFrameworkCore;
 
 namespace BEL.Api.Services;
 
@@ -12,13 +14,14 @@ public sealed class FeedbackService(BelDbContext db) : IFeedbackService
         CreateFeedbackRequest request,
         CancellationToken cancellationToken)
     {
-        var type = request.Type
-            ?? throw new BadRequestException("Feedback type is required.");
+        var type = request.GetFeedbackType()
+            ?? throw new BadRequestException("Feedback type must be either Problem or Suggestion.");
 
-        var message = request.Message.Trim();
+        var message = request.Message?.Trim() ?? string.Empty;
         if (message.Length is < Feedback.MinMessageLength or > Feedback.MaxMessageLength)
         {
-            throw new BadRequestException("Message must be between 10 and 1000 characters.");
+            throw new BadRequestException(
+                $"Message must be between {Feedback.MinMessageLength} and {Feedback.MaxMessageLength} characters after trimming spaces.");
         }
 
         var feedback = new Feedback
@@ -29,8 +32,27 @@ public sealed class FeedbackService(BelDbContext db) : IFeedbackService
         };
 
         db.Feedback.Add(feedback);
-        await db.SaveChangesAsync(cancellationToken);
+
+        try
+        {
+            await db.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateException exception) when (exception.InnerException is DbException)
+        {
+            throw new DatabaseUnavailableException(
+                "The database is temporarily unavailable. Please try again later.",
+                exception);
+        }
 
         return feedback.ToResponse();
+    }
+
+    public async Task<IReadOnlyList<FeedbackResponse>> ListAsync(CancellationToken cancellationToken)
+    {
+        return await db.Feedback
+            .AsNoTracking()
+            .OrderByDescending(feedback => feedback.CreatedAtUtc)
+            .ToResponse()
+            .ToListAsync(cancellationToken);
     }
 }
