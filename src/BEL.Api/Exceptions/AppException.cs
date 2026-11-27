@@ -1,6 +1,10 @@
 namespace BEL.Api.Exceptions;
 
-public abstract class AppException(string title, string message, int statusCode) : Exception(message)
+public abstract class AppException(
+    string title,
+    string message,
+    int statusCode,
+    Exception? innerException = null) : Exception(message, innerException)
 {
     public string Title { get; } = title;
 

@@ -19,4 +19,12 @@ public sealed class FeedbackController(IFeedbackService feedbackService) : Contr
         var response = await feedbackService.CreateAsync(User.GetUserId(), request, cancellationToken);
         return Created($"/api/feedback/{response.Id}", response);
     }
+
+    [HttpGet]
+    [Authorize(Policy = AuthorizationPolicies.AdminOnly)]
+    public async Task<ActionResult<IReadOnlyList<FeedbackResponse>>> List(CancellationToken cancellationToken)
+    {
+        var response = await feedbackService.ListAsync(cancellationToken);
+        return Ok(response);
+    }
 }
